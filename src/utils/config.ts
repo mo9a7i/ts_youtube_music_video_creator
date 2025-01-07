@@ -21,7 +21,7 @@ export function setupCli(): CliOptions {
     .requiredOption('-i, --input <path>', 'Input audio file path')
     .option('-o, --output <path>', 'Output video file path', 'output.mp4')
     .option('-r, --resolution <preset>', 'Video resolution preset', '1080p')
-    .option('-d, --duration <seconds>', 'Duration to process in seconds (0 for full)', '10')
+    .option('-d, --duration <seconds>', 'Duration to process in seconds (0 for full)', '0')
     .option('-f, --fps <number>', 'Frames per second', '15')
     .option('-p, --preset <preset>', 'Animation preset (0-3 or animation name)', '0')
     .option('--debug', 'Enable debug mode (save frames and raw files)', false);

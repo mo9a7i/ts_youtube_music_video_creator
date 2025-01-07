@@ -13,6 +13,7 @@ import { getVideoPreset } from './video';
 export async function processAnimation(
   options: CliOptions,
   analyser: AnalyserNode,
+  audioBuffer: AudioBuffer,
   dirs: { outDir: string, rawDir: string | null, imageDir: string | null, mp4Dir: string }
 ) {
   const { outDir, rawDir, imageDir, mp4Dir } = dirs;
@@ -20,6 +21,11 @@ export async function processAnimation(
   const fileTimestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/[T.]/g, '-').slice(0, 15);
   const { width, height, label } = getVideoPreset(options.resolution);
   console.log(`\nGenerating ${label} video...`);
+
+  // Calculate duration based on audio length if duration is 0
+  const duration = parseInt(options.duration) === 0 
+    ? Math.ceil(audioBuffer.duration)  // Use full audio length
+    : parseInt(options.duration);      // Use specified duration
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
@@ -29,7 +35,7 @@ export async function processAnimation(
   
   // Pre-allocate buffers
   const audioBufferData = new Uint8Array(analyser.frequencyBinCount);
-  const frameBuffer = Buffer.allocUnsafe(canvas.width * canvas.height * 4); // RGBA
+  const frameBuffer = Buffer.allocUnsafe(canvas.width * canvas.height * 4);
 
   const wave = new Wave(analyser, canvas);
   
@@ -44,34 +50,70 @@ export async function processAnimation(
   const videoStream = createFileStream(framesPath);
 
   // Animation loop
-  const totalFrames = Math.ceil(parseInt(options.duration) * parseInt(options.fps));
+  const totalFrames = Math.ceil(duration * parseInt(options.fps));
   const frameProgress = new ProgressBar(totalFrames, 'Frame Processing');
 
-  for (let frame = 0; frame < totalFrames; frame++) {
-    analyser.getByteFrequencyData(audioBufferData);
+  // Reuse objects to reduce GC pressure
+  let imageData = ctx.createImageData(canvas.width, canvas.height);
+
+  const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+  const writeQueue: Buffer[] = [];
   
+  async function processFrame(frameIndex: number, buffer: Buffer) {
+    analyser.getByteFrequencyData(audioBufferData);
+
     // Clear canvas and draw background first
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(backgroundBuffer, 0, 0);
-    ctx.globalAlpha = 0.9;  // Slight transparency for better blending
-    
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1.0;
+
     // Draw animation on top
     wave.draw(audioBufferData, ctx);
-    ctx.globalAlpha = 1.0;  // Reset alpha
 
-    // Save key frames as PNG if debug mode is enabled
-    if (options.debug && (frame === 0 || frame === Math.floor(totalFrames / 2) || frame === totalFrames - 1)) {
+    // Save debug frames
+    if (options.debug && (frameIndex === 0 || frameIndex === Math.floor(totalFrames / 2) || frameIndex === totalFrames - 1)) {
       const pngBuffer = canvas.toBuffer('image/png');
-      const framePath = join(imageDir!, `${fileTimestamp}-frame-${frame}.png`);
+      const framePath = join(imageDir!, `${fileTimestamp}-frame-${frameIndex}.png`);
       writeFile(framePath, pngBuffer);
       console.log(`Saved debug frame: ${framePath}`);
     }
 
-    // Write frame more efficiently
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    buffer.set(imageData.data);
+    return buffer;
+  }
+
+  function drainQueue() {
+    while (writeQueue.length && videoStream.writableLength < CHUNK_SIZE) {
+      const chunk = writeQueue.shift();
+      if (!videoStream.write(chunk)) break;
+    }
+  }
+  
+  videoStream.on('drain', drainQueue);
+
+  for (let frame = 0; frame < totalFrames; frame++) {
+    analyser.getByteFrequencyData(audioBufferData);
+    
+    // Clear canvas and draw background first
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundBuffer, 0, 0);
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1.0;
+    
+    // Draw animation on top
+    wave.draw(audioBufferData, ctx);
+
+    // Get frame data
+    imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     frameBuffer.set(imageData.data);
+    
+    // Write frame
     if (!videoStream.write(frameBuffer)) {
       await new Promise(resolve => videoStream.once('drain', resolve));
     }
@@ -100,7 +142,7 @@ export async function processAnimation(
       .input(options.input)
       .output(join(mp4Dir, `${fileTimestamp}-${options.preset || 'wave'}.mp4`))
       .videoCodec('libx264')
-      .outputOptions(ffmpegConfig.outputOptions(options.duration))
+      .outputOptions(ffmpegConfig.outputOptions(duration.toString()))
       .on('progress', (progress) => {
         encodingPercent = Math.min(99, Math.round(progress.percent || 0));
         encodingProgress.update(encodingPercent);

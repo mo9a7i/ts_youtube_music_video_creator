@@ -7,6 +7,7 @@ export interface FFmpegConfig {
 
 export async function createFFmpegConfig(): Promise<FFmpegConfig> {
   const hasGPU = await hasNvidiaGPU();
+
   if (hasGPU) {
     console.log('\nNVIDIA GPU detected - Using hardware acceleration (NVENC)');
   } else {
@@ -16,7 +17,7 @@ export async function createFFmpegConfig(): Promise<FFmpegConfig> {
   return {
     inputOptions: [
       `-f rawvideo`,
-      `-pixel_format bgra`,
+      `-pixel_format rgba`,
     ],
     outputOptions: (duration: string) => [
       ...(hasGPU ? [
@@ -25,18 +26,21 @@ export async function createFFmpegConfig(): Promise<FFmpegConfig> {
         '-b:v 20M',
         '-maxrate 25M',
         '-bufsize 20M',
-        '-rc:v vbr',
-        '-qmin 0',
-        '-qmax 24',
-        '-profile:v high'
+        '-rc:v constqp',
+        '-qp 18',
+        '-profile:v high',
+        '-spatial-aq 1',
+        '-aq-strength 8',
+        '-a53cc 0'
       ] : [
         '-c:v libx264',
         '-preset slow',
         '-profile:v high',
         '-crf 15',
-        '-x264-params ref=6:qcomp=0.8'
+        '-x264-params ref=6:qcomp=0.8:colorprim=bt709:transfer=bt709:colormatrix=bt709'
       ]),
       '-pix_fmt yuv420p',
+      '-vf format=yuv420p,colorspace=bt709:iall=bt709:fast=1',
       `-t ${duration}`,
     ].filter(Boolean)
   };

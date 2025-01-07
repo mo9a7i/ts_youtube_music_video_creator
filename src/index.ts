@@ -14,9 +14,9 @@ async function main() {
   
   const dirs = setupOutputDirectories(options.debug);
   const audioData = readFile(options.input);
-  const { analyser } = await setupAudio(audioData);
+  const { analyser, audioBuffer } = await setupAudio(audioData);
   
-  const framesPath = await processAnimation(options, analyser, dirs);
+  const framesPath = await processAnimation(options, analyser, audioBuffer, dirs);
   
   if (!options.debug) {
     cleanupTempFile(framesPath);

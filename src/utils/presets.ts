@@ -37,9 +37,9 @@ export const presets: Record<PresetKey, (wave: Wave) => void> = {
       wave.addAnimation(new wave.animations.Cubes({
         bottom: true,
         top: false, // Explicitly set to false to avoid interference
-        count: 40,
-        cubeHeight: 29,
-        fillColor: { gradient: ["#FA0000", "#006B1C"] },
+        count: 80,
+        cubeHeight: 46,
+        fillColor: { gradient: ["#ffffff", "#ffffff"] },
         lineColor: "rgba(0,0,0,0)",
         radius: 0,
         gap: 2 // Explicitly set gap to ensure consistent spacing
@@ -48,14 +48,14 @@ export const presets: Record<PresetKey, (wave: Wave) => void> = {
         top: true,
         bottom: false, // Explicitly set to false to avoid interference
         count: 80,
-        cubeHeight: 13,
-        fillColor: { gradient: ["#00D961", "#F76B00"] },
+        cubeHeight: 46,
+        fillColor: { gradient: ["#ffffff", "#FF5ACD"] },
         lineColor: "rgba(0,0,0,0)",
         radius: 0,
-        gap: 5 // Match gap with bottom cubes
+        gap: 2 // Match gap with bottom cubes
       }));
       wave.addAnimation(new wave.animations.Circles({
-        lineColor: { gradient: ["#FAD961", "#FAD961", "#F76B1C"], rotate: 90 },
+        lineColor: "white",
         lineWidth: 5,
         diameter: 80,
         count: 4,
