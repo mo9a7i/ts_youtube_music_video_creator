@@ -1,19 +1,7 @@
-import { IAnimation, IPolygonOptions } from "../types";
 import { Shapes } from "../util/Shapes";
 import { AudioData } from "../util/AudioData";
 import { CanvasRenderingContext2D } from "canvas";
-
-export interface IWaveOptions extends IPolygonOptions {
-    count: number;
-    frequencyBand?: "base" | "lows" | "mids" | "highs";
-    top?: boolean;
-    right?: boolean;
-    bottom?: boolean;
-    left?: boolean;
-    center?: boolean;
-    mirroredX?: boolean;
-    mirroredY?: boolean;
-}
+import { IWaveOptions, IAnimation } from "../types/effects";
 
 export class Wave implements IAnimation {
     private _options: Required<IWaveOptions>;

@@ -16,14 +16,12 @@ export class AudioData {
 
         let bands: IBands = {
             base: this.data.slice(0, baseLength),
-            lows: this.data.slice(baseLength + 1, baseLength + lowsLength),
-            mids: this.data.slice(baseLength + lowsLength + 1, baseLength + lowsLength + midsLength),
-            highs: this.data.slice(baseLength + lowsLength + midsLength + 1)
+            lows: this.data.slice(baseLength, baseLength + lowsLength),
+            mids: this.data.slice(baseLength + lowsLength, baseLength + lowsLength + midsLength),
+            highs: this.data.slice(baseLength + lowsLength + midsLength)
         };
 
         this.data = bands[band];
-
-        
     }
 
     public scaleData(maxSize: number) {

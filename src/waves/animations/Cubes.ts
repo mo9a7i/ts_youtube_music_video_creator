@@ -1,21 +1,8 @@
-import { IAnimation, IRectangleOptions } from "../types";
 import { Shapes } from "../util/Shapes";
 import { AudioData } from "../util/AudioData";
 import { CanvasRenderingContext2D } from "canvas";
+import { ICubesOptions, IAnimation } from "../types/effects";
 
-export interface ICubesOptions extends IRectangleOptions {
-    count: number;
-    cubeHeight: number;
-    frequencyBand?: "base" | "lows" | "mids" | "highs";
-    gap: number;
-    top?: boolean;
-    right?: boolean;
-    bottom?: boolean;
-    left?: boolean;
-    center?: boolean;
-    mirroredX?: boolean;
-    mirroredY?: boolean;
-}
 
 export class Cubes implements IAnimation {
     private _options: Required<ICubesOptions>;

@@ -1,14 +1,9 @@
-import { IAnimation, IArcOptions, ICircleOptions } from "../types";
+import type { IAnimation, IArcsOptions } from "../types";
 import { Shapes } from "../util/Shapes";
 import { AudioData } from "../util/AudioData";
 import { CanvasRenderingContext2D } from "canvas";
 
 
-export interface IArcsOptions extends IArcOptions, ICircleOptions {
-    count?: number;
-    diameter?: number;
-    frequencyBand?: "base" | "lows" | "mids" | "highs";
-}
 
 export class Arcs implements IAnimation {
     private _options: Required<IArcsOptions>;

@@ -1,16 +1,9 @@
-import { IAnimation, IPolygonOptions } from "../types";
 import { Shapes } from "../util/Shapes";
 import { AudioData } from "../util/AudioData";
 import { CanvasRenderingContext2D } from "canvas";
+import { ITurntableOptions, IAnimation } from "../types/effects";
 
-export interface ITurntableOptions extends IPolygonOptions {
-    count: number;
-    cubeHeight: number;
-    diameter: number;
-    gap: number;
-    frequencyBand?: "base" | "lows" | "mids" | "highs";
-    rotate: number;
-}
+
 
 export class Turntable implements IAnimation {
     private _options: Required<ITurntableOptions>;

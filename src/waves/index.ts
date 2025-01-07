@@ -1,16 +1,18 @@
-import { IAnimation } from "./types";
-import { Arcs, IArcsOptions } from "./animations/Arcs";
-import { Circles, ICirclesOptions } from "./animations/Circles";
-import { Cubes, ICubesOptions } from "./animations/Cubes";
-import { Flower, IFlowerOptions } from "./animations/Flower";
-import { Glob, IGlobOptions } from "./animations/Glob";
-import { Lines, ILinesOptions } from "./animations/Lines";
-import { Shine, IShineOptions } from "./animations/Shine";
-import { Square, ISquareOptions } from "./animations/Square";
-import { Turntable, ITurntableOptions } from "./animations/Turntable";
-import type { CanvasRenderingContext2D } from "canvas";
-import { AnalyserNode, AudioContext } from "node-web-audio-api";
-import { Wave as WaveAnimation, IWaveOptions } from "./animations/Wave";
+import { Arcs } from "./animations/Arcs";
+import { Circles } from "./animations/Circles";
+import { Cubes } from "./animations/Cubes";
+import { Flower } from "./animations/Flower";
+import { Glob } from "./animations/Glob";
+import { Lines } from "./animations/Lines";
+import { Shine } from "./animations/Shine";
+import { Square } from "./animations/Square";
+import { Turntable } from "./animations/Turntable";
+import { AnalyserNode, AudioContext } from 'node-web-audio-api';
+import { CanvasRenderingContext2D } from 'canvas';
+import { Wave as WaveAnimation } from "./animations/Wave";
+import { AudioElement, IAnimation, IArcsOptions, ICirclesOptions, ICubesOptions, IFlowerOptions, IGlobOptions, ILinesOptions, IShineOptions, ISquareOptions, ITurntableOptions, IWaveOptions } from "./types";
+
+
 
 export {
     IArcsOptions,
@@ -25,8 +27,7 @@ export {
     IWaveOptions,
 };
 
-export type AudioElement =
-    AnalyserNode;
+
 
 export class Wave {
     public animations = {
@@ -85,11 +86,6 @@ export class Wave {
             if (!this._isPlaying) return;
 
             this._audioAnalyser.getByteFrequencyData(audioBufferData);
-            this._canvasContext.clearRect(
-                0, 0, 
-                this._canvasContext.canvas.width, 
-                this._canvasContext.canvas.height
-            );
 
             this._activeAnimations.forEach((animation) => {
                 animation.draw(audioBufferData, this._canvasContext);

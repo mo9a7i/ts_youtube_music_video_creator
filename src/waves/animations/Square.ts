@@ -1,13 +1,7 @@
-import { IAnimation, ILineOptions } from "../types";
 import { Shapes } from "../util/Shapes";
 import { AudioData } from "../util/AudioData";
 import { CanvasRenderingContext2D } from "canvas";
-
-export interface ISquareOptions extends ILineOptions {
-    count: number;
-    diameter: number;
-    frequencyBand?: "base" | "lows" | "mids" | "highs";
-}
+import { ISquareOptions, IAnimation } from "../types/effects";
 
 export class Square implements IAnimation {
     private _options: Required<ISquareOptions>;
@@ -20,6 +14,7 @@ export class Square implements IAnimation {
             lineColor: "white",
             lineWidth: 1,
             rounded: false,
+            fillColor: "white",
             glow: { strength: 0, color: "transparent" }
         };
 

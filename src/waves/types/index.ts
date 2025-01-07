@@ -1,2 +1,3 @@
-export * from './effects';
-export * from './canvas'; 
+export * from './effects.d';
+export * from './canvas.d';
+export * from './types.d';

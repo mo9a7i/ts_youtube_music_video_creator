@@ -1,15 +1,9 @@
-import { IAnimation, ILineOptions } from "../types";
 import { Shapes } from "../util/Shapes";
 import { AudioData } from "../util/AudioData";
 import { CanvasRenderingContext2D } from "canvas";
+import { IShineOptions, IAnimation } from "../types/effects";
 
-export interface IShineOptions extends ILineOptions {
-    count: number;
-    diameter: number;
-    frequencyBand?: "base" | "lows" | "mids" | "highs";
-    rotate: number;
-    offset?: boolean;
-}
+
 
 export class Shine implements IAnimation {
     private _options: Required<IShineOptions>;
@@ -24,6 +18,7 @@ export class Shine implements IAnimation {
             lineColor: "white",
             lineWidth: 1,
             rounded: false,
+            fillColor: "white",
             glow: { strength: 0, color: "transparent" }
         };
 

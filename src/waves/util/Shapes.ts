@@ -1,5 +1,5 @@
 import { CanvasRenderingContext2D as NodeCanvasContext, Image, createCanvas } from 'canvas';
-import { IPolygonOptions, IRectangleOptions, IArcOptions, ICircleOptions, ILineOptions } from "../types";
+import { IPolygonOptions, IRectangleOptions, IArcOptions, ICircleOptions, ILineOptions, ColorValue } from "../types";
 
 export class Shapes {
     private _canvasContext: NodeCanvasContext;
@@ -24,25 +24,33 @@ export class Shapes {
     }
 
     private _makeGradient(colors: string[], rotate?: number): CanvasGradient {
-        let startX = 0;
-        let startY = this._canvasContext.canvas.height / 2;
-        let endX = this._canvasContext.canvas.width;
-        let endY = this._canvasContext.canvas.height / 2
+        // Create diagonal gradient from top-left to bottom-right
+        const gradient = this._canvasContext.createLinearGradient(
+            0, 0,
+            this._canvasContext.canvas.width, this._canvasContext.canvas.height
+        );
+
         if (rotate) {
-            let originX = this._canvasContext.canvas.width / 2;
-            let originY = this._canvasContext.canvas.height / 2;
-            let rotatedStart = this._rotatePoint(originX, originY, startX, startY, rotate);
-            startX = rotatedStart.x
-            startY = rotatedStart.y
-            let rotatedEnd = this._rotatePoint(originX, originY, endX, endY, rotate);
-            endX = rotatedEnd.x;
-            endY = rotatedEnd.y;
+            this._canvasContext.save();
+            this._canvasContext.translate(
+                this._canvasContext.canvas.width / 2,
+                this._canvasContext.canvas.height / 2
+            );
+            this._canvasContext.rotate((rotate * Math.PI) / 180);
+            this._canvasContext.translate(
+                -this._canvasContext.canvas.width / 2,
+                -this._canvasContext.canvas.height / 2
+            );
         }
 
-        let gradient = this._canvasContext.createLinearGradient(startX, startY, endX, endY);
         colors.forEach((color, i) => {
-            gradient.addColorStop((1 / colors.length) * i, color);
+            gradient.addColorStop(i / (colors.length - 1), color);
         });
+
+        if (rotate) {
+            this._canvasContext.restore();
+        }
+
         return gradient;
     }
 

@@ -1,14 +1,9 @@
-import { IAnimation, IPolygonOptions } from "../types";
 import { Shapes } from "../util/Shapes";
 import { AudioData } from "../util/AudioData";
 import { CanvasRenderingContext2D } from "canvas";
+import { IGlobOptions, IAnimation } from "../types/effects";
 
-export interface IGlobOptions extends IPolygonOptions {
-    count: number;
-    diameter: number;
-    frequencyBand?: "base" | "lows" | "mids" | "highs";
-    mirroredX?: boolean;
-}
+
 
 export class Glob implements IAnimation {
     private _options: Required<IGlobOptions>;

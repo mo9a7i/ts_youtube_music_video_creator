@@ -1,19 +1,7 @@
-import { IAnimation, ILineOptions } from "../types";
 import { Shapes } from "../util/Shapes";
 import { AudioData } from "../util/AudioData";
 import { CanvasRenderingContext2D } from "canvas";
-
-export interface ILinesOptions extends ILineOptions {
-    count: number;
-    frequencyBand?: "base" | "lows" | "mids" | "highs";
-    top?: boolean;
-    right?: boolean;
-    bottom?: boolean;
-    left?: boolean;
-    center?: boolean;
-    mirroredX?: boolean;
-    mirroredY?: boolean;
-}
+import type { IAnimation, ILinesOptions } from "../types";
 
 export class Lines implements IAnimation {
     private _options: Required<ILinesOptions>;
@@ -30,6 +18,7 @@ export class Lines implements IAnimation {
             mirroredX: false,
             mirroredY: false,
             lineColor: "white",
+            fillColor: "white",
             lineWidth: 1,
             rounded: false,
             glow: { strength: 0, color: "transparent" }

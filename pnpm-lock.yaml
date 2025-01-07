@@ -11,9 +11,6 @@ importers:
       '@ffmpeg-installer/ffmpeg':
         specifier: ^1.1.0
         version: 1.1.0
-      '@foobar404/wave':
-        specifier: github:foobar404/Wave.js
-        version: https://codeload.github.com/foobar404/Wave.js/tar.gz/7ed12c4fc32c3174e08e7622e34c47282919a888
       canvas:
         specifier: ^3.0.1
         version: 3.0.1
@@ -381,10 +378,6 @@ packages:
     resolution: {integrity: sha512-Drt5u2vzDnIONf4ZEkKtFlbvwj6rI3kxw1Ck9fpudmtgaZIHD4ucsWB2lCZBXRxJgXR+2IMSti+4rtM4C4rXgg==}
     cpu: [x64]
     os: [win32]
-
-  '@foobar404/wave@https://codeload.github.com/foobar404/Wave.js/tar.gz/7ed12c4fc32c3174e08e7622e34c47282919a888':
-    resolution: {tarball: https://codeload.github.com/foobar404/Wave.js/tar.gz/7ed12c4fc32c3174e08e7622e34c47282919a888}
-    version: 2.0.5
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -1228,8 +1221,6 @@ snapshots:
 
   '@ffmpeg-installer/win32-x64@4.1.0':
     optional: true
-
-  '@foobar404/wave@https://codeload.github.com/foobar404/Wave.js/tar.gz/7ed12c4fc32c3174e08e7622e34c47282919a888': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:

@@ -1,13 +1,9 @@
-import { IAnimation, ICircleOptions } from "../types";
 import { Shapes } from "../util/Shapes";
 import { AudioData } from "../util/AudioData";
 import { CanvasRenderingContext2D } from "canvas";
+import type { IAnimation, ICirclesOptions } from "../types";
 
-export interface ICirclesOptions extends ICircleOptions {
-    count: number;
-    diameter: number;
-    frequencyBand?: "base" | "lows" | "mids" | "highs";
-}
+
 
 export class Circles implements IAnimation {
     private _options: Required<ICirclesOptions>;
@@ -20,6 +16,7 @@ export class Circles implements IAnimation {
             frequencyBand: "mids",
             lineColor: "white",
             lineWidth: 1,
+            rounded: false,
             glow: { strength: 0, color: "transparent" }
         };
 

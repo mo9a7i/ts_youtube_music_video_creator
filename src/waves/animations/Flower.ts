@@ -1,14 +1,9 @@
-import { IAnimation, IPolygonOptions } from "../types";
 import { Shapes } from "../util/Shapes";
 import { AudioData } from "../util/AudioData";
 import { CanvasRenderingContext2D } from "canvas";
+import { IFlowerOptions, IAnimation } from "../types/effects";
 
-export interface IFlowerOptions extends IPolygonOptions {
-    count: number;
-    diameter: number;
-    frequencyBand?: "base" | "lows" | "mids" | "highs";
-    rotate: number;
-}
+
 
 export class Flower implements IAnimation {
     private _options: Required<IFlowerOptions>;
