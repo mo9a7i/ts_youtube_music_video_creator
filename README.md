@@ -39,6 +39,7 @@ pnpm start -i input/audio.mp3 -o output.mp4 -f 30 -d 20 -p 1 -r 720p
 -f, --fps <number>      Frames per second (default: "15")
 -p, --preset <preset>   Animation preset (0-3 or animation name) (default: "0")
 --debug                 Enable debug mode (save frames and raw files)
+--stream               Create streamable output that can be played while processing
 ```
 
 ### Animation Presets

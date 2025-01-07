@@ -9,6 +9,7 @@ export interface CliOptions {
   fps: string;
   preset: string;
   debug: boolean;
+  stream: boolean;
 }
 
 export function setupCli(): CliOptions {
@@ -24,7 +25,8 @@ export function setupCli(): CliOptions {
     .option('-d, --duration <seconds>', 'Duration to process in seconds (0 for full)', '0')
     .option('-f, --fps <number>', 'Frames per second', '15')
     .option('-p, --preset <preset>', 'Animation preset (0-3 or animation name)', '0')
-    .option('--debug', 'Enable debug mode (save frames and raw files)', false);
+    .option('--debug', 'Enable debug mode (save frames and raw files)', false)
+    .option('--stream', 'Stream directly to VLC instead of saving file', false);
 
   program.parse();
   return program.opts<CliOptions>();

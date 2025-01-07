@@ -12,8 +12,6 @@ import { CanvasRenderingContext2D } from 'canvas';
 import { Wave as WaveAnimation } from "./animations/Wave";
 import { AudioElement, IAnimation, IArcsOptions, ICirclesOptions, ICubesOptions, IFlowerOptions, IGlobOptions, ILinesOptions, IShineOptions, ISquareOptions, ITurntableOptions, IWaveOptions } from "./types";
 
-
-
 export {
     IArcsOptions,
     ICirclesOptions,
@@ -26,8 +24,6 @@ export {
     ITurntableOptions,
     IWaveOptions,
 };
-
-
 
 export class Wave {
     public animations = {

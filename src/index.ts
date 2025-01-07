@@ -19,7 +19,9 @@ async function main() {
   const framesPath = await processAnimation(options, analyser, audioBuffer, dirs);
   
   if (!options.debug) {
-    cleanupTempFile(framesPath);
+    if (framesPath) {
+      cleanupTempFile(framesPath);
+    }
   }
   
   process.exit(0);

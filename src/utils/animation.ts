@@ -9,6 +9,10 @@ import type { CliOptions } from './config';
 import { createBackgroundBuffer } from './background';
 import { ProgressBar } from './progress';
 import { getVideoPreset } from './video';
+import { spawn } from 'child_process';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import { StreamServer } from './stream-server';
+import { Readable } from 'stream';
 
 export async function processAnimation(
   options: CliOptions,
@@ -22,10 +26,9 @@ export async function processAnimation(
   const { width, height, label } = getVideoPreset(options.resolution);
   console.log(`\nGenerating ${label} video...`);
 
-  // Calculate duration based on audio length if duration is 0
   const duration = parseInt(options.duration) === 0 
-    ? Math.ceil(audioBuffer.duration)  // Use full audio length
-    : parseInt(options.duration);      // Use specified duration
+    ? Math.ceil(audioBuffer.duration)  
+    : parseInt(options.duration);      
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
@@ -46,8 +49,48 @@ export async function processAnimation(
     wave.setDefaultColors('white', 'white');
   }
 
-  const framesPath = options.debug ? join(rawDir!, `${fileTimestamp}-output.raw`) : join(outDir, 'temp.raw');
-  const videoStream = createFileStream(framesPath);
+  let videoStream;
+  let ffmpegProcess;
+  let framesPath: string | null = null;
+
+  if (options.stream) {
+    const ffmpegConfig = await createFFmpegConfig();
+    const streamServer = new StreamServer();
+    const streamUrl = streamServer.start();
+    
+    ffmpegProcess = spawn(ffmpegInstaller.path, [
+      '-f', 'rawvideo',
+      '-pixel_format', 'rgba',
+      '-video_size', `${width}x${height}`,
+      '-framerate', options.fps,
+      '-i', '-',
+      '-c:v', ffmpegConfig.outputOptions(duration.toString()).includes('h264_nvenc') ? 'h264_nvenc' : 'libx264',
+      '-preset', 'slow',
+      '-profile:v', 'high',
+      ...(ffmpegConfig.outputOptions(duration.toString()).includes('h264_nvenc') ? [
+        '-rc:v', 'constqp',
+        '-qp', '18',
+        '-spatial-aq', '1',
+        '-aq-strength', '8'
+      ] : [
+        '-crf', '15',
+        '-x264-params', 'ref=6:qcomp=0.8'
+      ]),
+      '-pix_fmt', 'yuv420p',
+      '-f', 'mpegts',
+      'pipe:1'  // Output to stdout
+    ]);
+
+    // Pipe FFmpeg output to stream server
+    streamServer.setStream(ffmpegProcess.stdout as Readable);
+    videoStream = ffmpegProcess.stdin;
+
+    console.log('\nOpen this URL in your media player:');
+    console.log(streamUrl);
+  } else {
+    framesPath = options.debug ? join(rawDir!, `${fileTimestamp}-output.raw`) : join(outDir, 'temp.raw');
+    videoStream = createFileStream(framesPath);
+  }
 
   // Animation loop
   const totalFrames = Math.ceil(duration * parseInt(options.fps));
@@ -55,45 +98,6 @@ export async function processAnimation(
 
   // Reuse objects to reduce GC pressure
   let imageData = ctx.createImageData(canvas.width, canvas.height);
-
-  const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
-  const writeQueue: Buffer[] = [];
-  
-  async function processFrame(frameIndex: number, buffer: Buffer) {
-    analyser.getByteFrequencyData(audioBufferData);
-
-    // Clear canvas and draw background first
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundBuffer, 0, 0);
-    ctx.globalAlpha = 0.7;
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 1.0;
-
-    // Draw animation on top
-    wave.draw(audioBufferData, ctx);
-
-    // Save debug frames
-    if (options.debug && (frameIndex === 0 || frameIndex === Math.floor(totalFrames / 2) || frameIndex === totalFrames - 1)) {
-      const pngBuffer = canvas.toBuffer('image/png');
-      const framePath = join(imageDir!, `${fileTimestamp}-frame-${frameIndex}.png`);
-      writeFile(framePath, pngBuffer);
-      console.log(`Saved debug frame: ${framePath}`);
-    }
-
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    buffer.set(imageData.data);
-    return buffer;
-  }
-
-  function drainQueue() {
-    while (writeQueue.length && videoStream.writableLength < CHUNK_SIZE) {
-      const chunk = writeQueue.shift();
-      if (!videoStream.write(chunk)) break;
-    }
-  }
-  
-  videoStream.on('drain', drainQueue);
 
   for (let frame = 0; frame < totalFrames; frame++) {
     analyser.getByteFrequencyData(audioBufferData);
@@ -108,6 +112,19 @@ export async function processAnimation(
     
     // Draw animation on top
     wave.draw(audioBufferData, ctx);
+
+    // Add timestamp overlay
+    const currentTime = (frame / parseInt(options.fps)).toFixed(1);
+    ctx.font = `${Math.max(24, height / 40)}px Arial`;  // Scale font with resolution
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'white';
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 2;
+    const text = `${currentTime}s`;
+    const padding = width * 0.02;  // 2% padding from edges
+    const yPos = height * 0.05;    // 5% from top
+    ctx.strokeText(text, width - padding, yPos);
+    ctx.fillText(text, width - padding, yPos);
 
     // Get frame data
     imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -127,36 +144,40 @@ export async function processAnimation(
   await new Promise(resolve => videoStream.end(resolve));
 
   // Encode video using FFmpeg
-  const encodingProgress = new ProgressBar(100, 'Video Encoding');
-  let encodingPercent = 0;
-  const ffmpegConfig = await createFFmpegConfig();
+  if (!options.stream) {
+    const encodingProgress = new ProgressBar(100, 'Video Encoding');
+    let encodingPercent = 0;
+    const ffmpegConfig = await createFFmpegConfig();
 
-  await new Promise((resolve, reject) => {
-    ffmpeg()
-      .input(framesPath)
-      .inputOptions([
-        ...ffmpegConfig.inputOptions,
-        `-video_size ${width}x${height}`,
-        `-framerate ${options.fps}`,
-      ])
-      .input(options.input)
-      .output(join(mp4Dir, `${fileTimestamp}-${options.preset || 'wave'}.mp4`))
-      .videoCodec('libx264')
-      .outputOptions(ffmpegConfig.outputOptions(duration.toString()))
-      .on('progress', (progress) => {
-        encodingPercent = Math.min(99, Math.round(progress.percent || 0));
-        encodingProgress.update(encodingPercent);
-      })
-      .on('end', resolve)
-      .on('error', reject)
-      .run();
-  });
+    if (!framesPath) throw new Error('Frames path is null');
 
-  encodingProgress.update(100);  // Ensure we show 100%
-  encodingProgress.complete();
+    await new Promise((resolve, reject) => {
+      ffmpeg()
+        .input(framesPath)
+        .inputOptions([
+          ...ffmpegConfig.inputOptions,
+          `-video_size ${width}x${height}`,
+          `-framerate ${options.fps}`,
+        ])
+        .input(options.input)
+        .output(join(mp4Dir, `${fileTimestamp}-${options.preset || 'wave'}.mp4`))
+        .videoCodec('libx264')
+        .outputOptions(ffmpegConfig.outputOptions(duration.toString()))
+        .on('progress', (progress) => {
+          encodingPercent = Math.min(99, Math.round(progress.percent || 0));
+          encodingProgress.update(encodingPercent);
+        })
+        .on('end', resolve)
+        .on('error', reject)
+        .run();
+    });
+
+    encodingProgress.update(100);  // Ensure we show 100%
+    encodingProgress.complete();
+  }
 
   const totalTime = (Date.now() - startTime) / 1000;
   console.log(`\nTotal time: ${totalTime.toFixed(2)}s`);
 
-  return framesPath;
-} 
+  return options.stream ? null : framesPath;
+}

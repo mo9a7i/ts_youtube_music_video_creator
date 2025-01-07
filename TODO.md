@@ -21,3 +21,4 @@ Consider:
 - https://getschwfty.hashnode.dev/adding-audio-visualizers-to-your-website-in-5-minutes
 - https://audiomotion.dev/#/
 - https://github.com/unconed/ThreeAudio.js/
+- https://www.youtube.com/watch?v=DVWVbSUVQR0
